@@ -1,4 +1,4 @@
-# RentAFriend-Frontend
+# RentAFriend-Frontend-
 
 There is no protected branches, working on trust, please Adhere below listed Rules.
 
