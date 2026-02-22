@@ -92,6 +92,22 @@ jobs:
             echo "type=patch" >> $GITHUB_OUTPUT
             echo "Bump type: patch"
           fi
+      
+      - name: Check if version already bumped
+        id: check-bump
+        run: |
+          git fetch origin develop
+          LOCAL=$(node -p "require('./package.json').version")
+          DEVELOP=$(git show origin/develop:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+          echo "Branch version: $LOCAL"
+          echo "Develop version: $DEVELOP"
+          if [ "$LOCAL" != "$DEVELOP" ]; then
+            echo "already_bumped=true" >> $GITHUB_OUTPUT
+            echo "Version already bumped, skipping"
+          else
+            echo "already_bumped=false" >> $GITHUB_OUTPUT
+            echo "Version not bumped yet, will bump"
+          fi
 
       - name: Bump version in package.json
         run: npm --no-git-tag-version version ${{ steps.bump-type.outputs.type }}
