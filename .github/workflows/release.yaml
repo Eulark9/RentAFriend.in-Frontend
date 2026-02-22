@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+jobs:
+  release:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Get version from package.json
+        id: get-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Determine bump type from PR title
+        id: bump-type
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $TITLE"
+          if [[ "$TITLE" == feat!:* ]] || [[ "$TITLE" == *"BREAKING CHANGE"* ]]; then
+            echo "type=major" >> $GITHUB_OUTPUT
+            echo "Bump type: major"
+          else
+            echo "type=minor" >> $GITHUB_OUTPUT
+            echo "Bump type: minor"
+          fi
+
+      - name: Bump version for release
+        run: npm --no-git-tag-version version ${{ steps.bump-type.outputs.type }}
+
+      - name: Get new version after bump
+        id: new-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION"
+
+      - name: Commit version bump
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add package.json package-lock.json
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "chore: release v${{ steps.new-version.outputs.version }} [skip ci]"
+            git push
+          else
+            echo "No version changes to commit"
+          fi
+
+      - name: Create Git tag
+        run: |
+          git tag "v${{ steps.new-version.outputs.version }}"
+          git push origin "v${{ steps.new-version.outputs.version }}"

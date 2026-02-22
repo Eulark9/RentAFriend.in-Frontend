@@ -220,3 +220,48 @@ Breaking change?     →   feat!: describe the breaking change
 ```
 
 If you have any questions, reach out to the team before opening your PR.
+
+
+develop.yml explaination 
+## The flow is now crystal clear
+```
+PR opened to develop
+        │
+        ├──▶ PR Title Check ──┐
+        ├──▶ Build ───────────┤  all run in parallel
+        ├──▶ Lint ────────────┤
+        └──▶ Security Audit ──┘
+                    │
+              all 4 passed? ✅
+                    │
+                    ▼
+             Version Bump
+          (only runs if everything above passed)
+
+
+release.yaml explanation
+## What this file does
+```
+PR from develop → main is merged
+        │
+        ▼
+Reads version from package.json
+        │
+        ├──▶ PR title has feat!: or BREAKING CHANGE  →  major bump  (0.2.0 → 1.0.0)
+        └──▶ anything else                            →  minor bump  (0.1.4 → 0.2.0)
+        │
+        ▼
+Commits updated package.json to main
+        │
+        ▼
+Creates Git tag  e.g. v0.2.0 🎉
+```
+
+---
+
+## Your final workflows folder now looks like
+```
+.github/
+  workflows/
+    develop.yml   ← PRs to develop (checks + version bump)
+    release.yml   ← merge to main (release tag)
