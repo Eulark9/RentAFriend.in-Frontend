@@ -8,4 +8,5 @@ There is no protected branches, working on trust, please Adhere below listed Rul
 * At least 1 teammate reviews and approves before merging
 * Delete the branch after merging to keep things clean. 
 
-[Also read How to contribute to PR nad how versioning works ](./CONTRIBUTING.md)
+[Also read How to contribute to PR and how versioning works ](./CONTRIBUTING.md)
+[Also if you want to read full how workflows work, read this ](./documentation/WORKFLOWS.md)
