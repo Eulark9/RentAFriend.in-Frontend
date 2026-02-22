@@ -85,7 +85,7 @@ jobs:
         run: |
           TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $TITLE"
-          if [[ "$TITLE" == feat:* ]]; then
+          if [[ "$TITLE" == feat!:* ]] || [[ "$TITLE" == feat:* ]]; then
             echo "type=minor" >> $GITHUB_OUTPUT
             echo "Bump type: minor"
           else

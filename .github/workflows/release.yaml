@@ -4,12 +4,51 @@ on:
   pull_request:
     branches:
       - main
-    types: [closed]
+    types: [opened, synchronize, reopened, ready_for_review, closed]
 
 jobs:
+  check-minor-version:
+    name: Check Minor Version Changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Compare minor versions
+        run: |
+          DEVELOP_VERSION=$(node -p "require('./package.json').version")
+          MAIN_VERSION=$(git show origin/main:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version")
+
+          echo "Develop version: $DEVELOP_VERSION"
+          echo "Main version: $MAIN_VERSION"
+
+          DEVELOP_MINOR=$(echo $DEVELOP_VERSION | cut -d. -f2)
+          MAIN_MINOR=$(echo $MAIN_VERSION | cut -d. -f2)
+
+          echo "Develop minor: $DEVELOP_MINOR"
+          echo "Main minor: $MAIN_MINOR"
+
+          if [ "$DEVELOP_MINOR" -le "$MAIN_MINOR" ]; then
+            echo "❌ No minor version change detected."
+            echo "Only patch changes found — cannot merge to main."
+            echo "You need at least one feat: PR merged to develop first."
+            exit 1
+          else
+            echo "✅ Minor version changed — release allowed."
+          fi
+
   release:
     name: Create Release Tag
     runs-on: ubuntu-latest
+    needs: [check-minor-version]
     if: github.event.pull_request.merged == true
     permissions:
       contents: write
@@ -26,13 +65,11 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-
-      - name: Get version from package.json
-        id: get-version
+      
+      - name: Final build
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION"
+          npm ci
+          npm run build
 
       - name: Determine bump type from PR title
         id: bump-type
