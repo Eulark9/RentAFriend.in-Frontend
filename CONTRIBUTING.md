@@ -221,7 +221,6 @@ Breaking change?     →   feat!: describe the breaking change
 
 If you have any questions, reach out to the team before opening your PR.
 
-
 develop.yml explaination 
 ## The flow is now crystal clear
 ```
@@ -239,7 +238,8 @@ PR opened to develop
           (only runs if everything above passed)
 
 
-release.yaml explanation
+## Release.yaml explanation
+
 ## What this file does
 ```
 PR from develop → main is merged
